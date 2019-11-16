@@ -1,180 +1,133 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  html_document:
+    toc: true
+    theme: united
 ---
+
 
 ```{r}
 library(forecast)
 library(ggplot2)
 library(tidyverse)
 library(dplyr)
+
+#datasets
 library(fpp2)
 ```
 
 
-
 ```{r}
-
-
-data <- read.csv(file='./data/totais_diarios.csv')
-
-y <- ts(data, start=1, end=113 + 4/7, frequency=7)
-
-
-```
-
-```{r}
-length(y)
-```
-
-```{r}
-plot(y)
-```
-
-```{r}
-train <- window(y, start=c(2017,1), end= c(2018,365),frequency=365)
-test <- window(y, start=c(2019,1), end=c(2019,59), frequency = 365)
-
-```
-
-```{r}
-
-train <- window(y, start=1, end=105 + 1/7 ,frequency=7)
-test <- window(y, start=105 + 2/7, end=113 + 4/7, frequency = 7)
-
-```
-
-
-```{r}
-plot(train)
-#plot(test)
-```
-
-```{r}
-length(train)
-length(test)
-```
-```{r}
-
-autoplot(train)
-```
-
-```{r}
-autoplot(test)
-```
-```{r}
-library(EnvStats)
- train_after_boxcox = boxcox(as.numeric(train), objective.name = "Log-Likelihood", optimize = TRUE) 
-```
-
-```{r}
-autoplot(train_after_boxcox)
-```
-
-```{r}
-arima_fit <- auto.arima(train, approximation=FALSE , stepwise=FALSE)
-```
-
-```{r}
-arima_fit_raw <- auto.arima(train)
-```
-
-```{r}
-arima_fit
-```
-
-```{r}
-arima_fit_raw
+data <- read.csv(file='./data/qty_promotion.csv')
 ```
 
 
 
 ```{r}
-checkresiduals(arima_fit)
+series <- ts(data, start=1, end=113 + 4/7, frequency=7)
+train <- window(series[,1], start=1, end=105 + 1/7 ,frequency=7)
+test <- window(series[,1], start=105 + 2/7, end=107 + 1/7, frequency = 7)
+promo_train <-  window(series[,2], start=1, end=105 + 1/7 ,frequency=7)
+
+fit_tslm <- tslm(train ~ trend + season)
+print(mytslm)
+
+```
+
+
+```{r}
+result_fit_tslm <- forecast(fit_tslm,h = 14)
+
+```
+
+
+
+```{r}
+
+#FIT
+arima_fit <- auto.arima(train)
+
 ```
 
 ```{r}
-checkresiduals(arima_fit_raw)
+residarima1 <- auto.arima(fit_tslm$residuals)
+residualsArimaForecast <- forecast(residarima1, h=14)
+residualsF <- as.numeric(residualsArimaForecast$mean)
+
+regressionForecast <- forecast(fit_tslm,h=14)
+regressionF <- as.numeric(regressionForecast$mean)
+
+forecastR <- regressionF+residualsF
+
 ```
 
-```{r}
-result_arima <- forecast(arima_fit,h = 7)
-```
+
 
 ```{r}
-result_arima_raw <- forecast(arima_fit_raw,h = 7)
+#Fit sem stepwise e aproximation
+result_arima <- forecast(arima_fit,h = 14)
 ```
 
-```{r}
-arima_fit
-```
 
 ```{r}
+#accuracy de forecasted com treino
+
+accuracy(forecastR,test)
 accuracy(result_arima,test)
+accuracy(result_fit_tslm,test)
+
 ```
+
+
+
+
 
 ```{r}
-accuracy(result_arima_raw,test)
+#Accuracy, residuals, modelo
+accuracy(arima_fit)
+checkresiduals(arima_fit)
+arima_fit
 ```
 
-
-```{r}
-autoplot(test, series='test') +
-  autolayer(result_arima, PI=FALSE, series="Arima results") +
-  xlab("day") +
-  ylab("Value") +
-  ggtitle("Qty sell") +
-  guides(colour=guide_legend(title="Forecast"))
-```
 
 ```{r}
 plot_start = 0
-plot_end = 30
-autoplot(ts(train[plot_start:plot_end]), series='treino') +
-  autolayer(ts(fitted(result_arima)[plot_start:plot_end]),  series="Arima fitted values") +
+plot_end = 59
+autoplot(ts(test[plot_start:plot_end]), series='treino') +
+  autolayer(ts(result_arima$mean[plot_start:plot_end]),  series="Forecasted") +
   xlab("day") +
   ylab("Value") +
-  ggtitle("Qty sell") +
-  guides(colour=guide_legend(title="Forecast"))
+  ggtitle("Comparacão de valores forecasted e testes") +
+  guides(colour=guide_legend(title="Legenda"))
 ```
+
+
+
 ```{r}
-autoplot(test, series='test', shape=10) +
-  autolayer(result_arima$mean,  series="Arima results") +
+plot_start = 0
+plot_end = 730
+autoplot(ts(train[plot_start:plot_end]), series='train') +
+  autolayer(ts(fitted(arima_fit)[plot_start:plot_end]),  series="fitted") +
   xlab("day") +
-  ylab("Value") +
-  ggtitle("Qty sell") +
-  guides(colour=guide_legend(title="Forecast"))
+  ylab("quantity") +
+  ggtitle("Comparaçao de valores de treino com fitted") +
+  guides(colour=guide_legend(title="Legend"))
+
 ```
 
 
-```{r}
-#View dos valores de teste, forecasted e diferenças
-test_matrix = as.matrix(test)
-forecasted_matrix = as.matrix(result_arima$mean)
-difference_test <- test_matrix - forecasted_matrix
 
-test_table_difference = data.frame( test_matrix, forecasted_matrix, difference_test)
 
-names(test_table_difference)[1] <- "teste"
-names(test_table_difference)[2] <- "forecasted"
-names(test_table_difference)[3] <- "diferença"
 
-view(test_table_difference)
-```
 
-```{r}
-#View dos valores de teste
-train_matrix = as.matrix(train)
-forecasted_matrix = as.matrix(fitted(result_arima))
-difference_train <- train_matrix - forecasted_matrix
 
-train_table_difference = data.frame( train_matrix, forecasted_matrix, difference_train)
 
-names(train_table_difference)[1] <- "train"
-names(train_table_difference)[2] <- "forecasted"
-names(train_table_difference)[3] <- "diferença"
 
-view(train_table_difference)
-```
+
+
+
+
+
 
 

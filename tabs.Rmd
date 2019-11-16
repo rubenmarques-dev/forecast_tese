@@ -1,0 +1,120 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+data <- read.csv(file='./data/dourada_decimais.csv')
+#ts <- read.csv(file='./data/qty_promotion.csv')
+
+train_end <- 942
+test_start <- 943
+num_h <- 13
+test_end <- test_start + num_h - 1
+train <- data$quantidade[0:train_end]
+teste <- data$quantidade[test_start:test_end]
+
+real <- ts(data$quantidade[test_start:test_end])
+previsto <- ts(data$previsto[test_start:test_end])
+diferenca <- ts(data$diferenca[test_start:test_end])
+
+
+msts <- msts(train,seasonal.periods = c(7,365.25),start = decimal_date(as.Date("2017-01-01")))
+#plot(msts, main="Sales dourada grande Admissions", xlab="Year", ylab="Sales")
+
+
+```
+
+
+
+
+
+```{r}
+fit <- tbats(msts)
+#plot(fit, main="Multiple Season Decomposition")
+```
+
+
+```{r}
+sp<- forecast(tbats,h=num_h)
+plot(sp, main = "TBATS Forecast", include=56)
+```
+
+```{r}
+autoplot(real, series='real') +
+  autolayer(previsto,  series="previsto") +
+  autolayer(ts(as.numeric(sp$mean)),  series="bats") +
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Quantity of fresh fish selled") +
+  guides(colour=guide_legend(title="Legend"))
+```
+
+
+
+
+```{r}
+accuracy(sp,ts[,1][731:735])
+```
+
+```{r}
+print(sp)
+```
+
+
+
+
+
+```{r}
+for (i in 1:1)
+{ nTest <- 2*i  
+  nTrain <- length(msts)- nTest 
+  train <- window(msts,start=decimal_date(as.Date("2017-01-01")),end=c(decimal_date(as.Date("2017-01-01")),nTrain))
+  test <- window(msts, start=c(decimal_date(as.Date("2017-01-01")),nTrain+1), end=c(decimal_date(as.Date("2017-01-01")),nTrain+14))
+  
+  s <- tbats(train)
+  sp<- forecast(s,h=14)
+  
+  cat("----------------------------------
+      
+Data Partition",i,"
+      
+Training Set includes",nTrain," time periods. Observations 1 to", nTrain, "
+Test Set includes 14 time periods. Observations", nTrain+1, "to", nTrain+14,"
+      
+")
+  print(accuracy(sp,test))
+  cat("
+      
+      ")
+  print(sp$model)
+}
+```
+
+
+```{r}
+for (i in 1:1)
+{ nTest <- 2*i  
+  nTrain <- length(msts)- nTest 
+  train <- window(msts,start=decimal_date(as.Date("2017-01-01")),end=c(decimal_date(as.Date("2017-01-01")),nTrain))
+  test <- window(msts, start=c(decimal_date(as.Date("2017-01-01")),nTrain+1), end=c(decimal_date(as.Date("2017-01-01")),nTrain+14))
+  
+  s <- tbats(train)
+  sp<- forecast(s,h=14)
+  
+  cat("----------------------------------
+      
+Data Partition",i,"
+      
+Training Set includes",nTrain," time periods. Observations 1 to", nTrain, "
+Test Set includes 14 time periods. Observations", nTrain+1, "to", nTrain+14,"
+      
+")
+  print(accuracy(sp,test))
+  cat("
+      
+      ")
+  print(sp$model)
+}
+```

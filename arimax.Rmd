@@ -1,0 +1,150 @@
+---
+title: "Arimax forecast using quantity and quantity in promotion"
+output: arimax_notebook
+---
+
+
+
+
+
+
+
+```{r}
+
+#arimax_fit <- auto.arima(train, xreg = promo_train, approximation=FALSE , stepwise=FALSE)
+arimax_fit <- auto.arima(train, xreg = promo_dummy1)
+```
+
+
+```{r}
+
+#arimax_fit <- auto.arima(train, xreg = promo_train, approximation=FALSE , stepwise=FALSE)
+arimax_fit <- auto.arima(train_year, xreg = dummies_year)
+```
+
+
+```{r}
+ano1 <-  0
+ano2 <- (-1/2)
+plot_start <- 0 + ( 365 * ano1)
+plot_end <- 365 + ( 365 * ano2)
+autoplot(ts(train[plot_start:plot_end]), series='train') +
+  autolayer(ts(fitted(arimax_fit)[plot_start:plot_end]),  series="fitted") +  
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Comparaçao de fitted com treino") +
+  guides(colour=guide_legend(title="Legend"))
+```
+
+
+
+```{r}
+#Residuals, accuracy e modelo
+checkresiduals(arimax_fit)
+accuracy(arimax_fit)
+arimax_fit
+```
+
+
+```
+
+
+
+```{r}
+
+
+arimax_fit2 <- auto.arima(train_year, xreg = xreg)
+```
+
+
+```{r}
+arimax_fit2
+```
+
+```{r}
+accuracy(arimax_fit2)
+```
+
+
+
+```{r}
+checkresiduals(arimax_zero_values)
+```
+
+```{r}
+result_arimax_zero_values <- forecast(arimax_zero_values, xreg=c(1), h = 1)
+```
+
+
+```{r}
+result_arimax_zero_values
+```
+
+```{r}
+accuracy(test,result_arimax_zero_values)
+```
+
+
+```{r}
+plot_start = 0
+plot_end = 1
+autoplot(test, series='train') +
+  autolayer(window(result_arimax_zero_values, start=105 + 2/7, end=113 + 4/7, frequency = 7),   series="forecasted") +
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Quantity of fresh fish seleed") +
+  guides(colour=guide_legend(title="Legend"))
+```
+
+
+```{r}
+plot_start = 0
+plot_end = 30
+autoplot(test, series='train') +
+  autolayer(ts(fitted(arimax_fit_raw)[plot_start:plot_end]),  series="fitted") +
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Quantity of fresh fish seleed") +
+  guides(colour=guide_legend(title="Legend"))
+
+```
+
+
+```{r}
+arimax_year <- auto.arima(train_year, xreg = promo_train)
+```
+
+
+```{r}
+checkresiduals(arimax_year)
+accuracy(arimax_year)
+arimax_year
+```
+
+```{r}
+result_arimax_year <- forecast(arimax_year, xreg=c(), h = 10)
+```
+
+```{r}
+result_arimax_year
+```
+
+```{r}
+plot_start = 0
+plot_end = 10
+autoplot(test_year, series='train') +
+  autolayer(ts(fitted(result_arimax_year)[plot_start:plot_end], start=2019 + 2/365, end=2019+10/365, frequency = 365),  series="fitted") + 
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Quantity of fresh fish seleed") +
+  guides(colour=guide_legend(title="Legend"))
+
+```
+
+
+
+
+
+
+
+

@@ -1,0 +1,64 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+ts <- read.csv(file='./data/dourada_grande_loja_3_vendas_promocoes.csv')
+train <- ts$quantidade
+
+
+tsw <- ts(train, start = decimal_date(as.Date("2017-01-01")), frequency = 7)
+promo <- ts(data$promocao_dummy1, start = decimal_date(as.Date("2017-01-01")), frequency = 7)
+#mytslm <- tslm(tsw ~ trend + season)
+mytslm <- tslm(tsw ~ trend + season)
+print(mytslm)
+
+```
+```{r}
+tsw
+```
+
+
+
+```{r}
+
+
+for (i in 1:1)
+{
+  nTest <- 1*i  
+  nTrain <- length(tsw)- nTest
+  horizont=2
+  train <- window(tsw,start=decimal_date(as.Date("2017-01-01")),end=c(decimal_date(as.Date("2017-01-01")),nTrain))
+  test <- window(tsw, start=c(decimal_date(as.Date("2017-01-01")),nTrain+1), end=c(decimal_date(as.Date("2017-01-01")),nTrain+horizont))
+
+  trainlm <- tslm(train  ~ trend + season )
+  trainlmf <- forecast(trainlm,h=horizont)
+ 
+  residauto <- auto.arima(trainlm$residuals)
+  residf <- forecast(residauto,h=horizont)
+  
+  y <- as.numeric(trainlmf$mean)
+  x <- as.numeric(residf$mean)
+  sp <- x+y
+  
+  cat("----------------------------------
+      
+Data Partition",i,"
+      
+Training Set includes",nTrain," time periods. Observations 1 to", nTrain, "
+Test Set includes 14 time periods. Observations", nTrain+1, "to", nTrain+horizont,"
+      
+")
+  
+ print(accuracy(sp,test))
+ print(residauto)
+
+  cat("
+    
+    ")
+  
+}
+```
+

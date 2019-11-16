@@ -5,9 +5,48 @@ library(dplyr)
 library(fpp2)
 
 
+
+```{r}
+
 data <- read.csv(file='./data/totais_diarios.csv')
 
 y <- ts(data, start=2017, end=2019+59/365, frequency=365)
 
+simple_train <- window(y, start=2017, end=2018-1/365, frequency=365)
+test_size = 10
+simple_test <- window(y, start=2018, end=2018+( test_size - 1 )/365, frequency=365)
+```
+
+```{r}
+view(simple_test)
+#view(simple_train)
+```
+
+
+
+```{r}
 
 autoplot(y)
+```
+```{r}
+
+simple_forecast <- ses(simple_train, h=test_size)
+holt_forecast <- holt(simple_train, h=test_size)
+#simple_forecast <- holt(simple_train, h=test_size)
+
+
+# Accuracy of one-step-ahead training errors
+accuracy(simple_forecast,simple_test)
+
+```
+```{r}
+autoplot(simple_train) +
+  autolayer(fitted(simple_forecast), series="Fitted") +
+  ylab("Quantityl seleed") + xlab("day")
+```
+
+```{r}
+autoplot(simple_test) +
+   autolayer(simple_forecast$mean, series="forecasted") +
+  ylab("Quantityl seleed") + xlab("day")
+```

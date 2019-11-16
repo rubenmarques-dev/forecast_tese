@@ -1,0 +1,107 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+
+
+
+
+```{r}
+data <- read.csv(file='./data/dourada_grande_loja_3_vendas_promocoes.csv')
+```
+
+
+
+```{r}
+
+train <- window(data$quantidade, start=1, end=105 + 1/7 ,frequency=7)
+test <- window(data$quantidade, start=105 + 2/7, end=113 + 4/7, frequency = 7)
+promo_dummy1 <-  window(data$promocao_dummy1, start=1, end=105 + 1/7 ,frequency=7)
+zero_dummy <-  window(data$zero_sales, start=1, end=105 + 1/7 ,frequency=7)
+
+
+
+
+```
+
+```{r}
+view(promo_train)
+```
+
+```{r}
+length(promo_train)
+```
+```{r}
+view(train)
+```
+
+```{r}
+length(train)
+```
+
+```{r}
+length(test)
+```
+
+
+```{r}
+
+train_year <- ts(data$quantidade, start=2017, end=2019 + 1/365 ,frequency=365)
+test_year <- ts(data$quantidade, start=2019 + 2/365, end=2019+58/365, frequency = 365)
+promo_train1 <-  ts(data$promocao_dummy1, start=2017, end=2019 + 1/365 ,frequency=365)
+promo_train2 <-  ts(data$promocao_dummy2, start=2017, end=2019 + 1/365 ,frequency=365)
+promo_train3 <-  ts(data$promocao_dummy3, start=2017, end=2019 + 1/365 ,frequency=365)
+zero_values <-  ts(data$zero_sales, start=2017, end=2019 + 1/365 ,frequency=365)
+
+dummies_year <- cbind(promo1 = as.numeric(promo_train1),
+              promo2 = as.numeric(promo_train2),
+              promo3s = as.numeric(promo_train3),
+              zeros = as.numeric(zero_values))
+```
+
+```{r}
+length(train_year)
+```
+
+```{r}
+length(test_year[,1])
+```
+
+
+```{r}
+series_day <- ts(data, start=1, end=789, frequency=1)
+train_day <- window(series_day, start=1, end=730 ,frequency=1)
+test_day <- window(series_day, start=731, end=789, frequency = 1)
+```
+
+```{r}
+length(train_day[,1])
+```
+
+```{r}
+length(test_day[,1])
+```
+
+```{r}
+autoplot(test)
+``` 
+
+```{r}
+autoplot(train)
+```
+
+
+
+```{r}
+plot_start = 0
+plot_end = 30
+autoplot(ts(series[,1][plot_start:plot_end]), series='total') +
+  autolayer(ts(series[,2][plot_start:plot_end]),  series="on promotion") +
+  xlab("day") +
+  ylab("quantity") +
+  ggtitle("Quantity of fresh fish selled") +
+  guides(colour=guide_legend(title="Legend"))
+```
+```
+
